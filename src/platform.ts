@@ -9,7 +9,10 @@ import {
 } from "homebridge";
 
 import { PLATFORM_NAME, PLUGIN_NAME } from "./settings";
-import { ThermobeaconWs08Accessory } from "./platformAccessory";
+import {
+  ThermobeaconWs08Accessory,
+  ThermobeaconWs08Context,
+} from "./platformAccessory";
 
 /**
  * HomebridgePlatform
@@ -62,10 +65,10 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services
     // or a user-defined array in the platform config.
-    const exampleDevices = [
+    const exampleDevices: ThermobeaconWs08Context[] = [
       {
-        exampleUniqueId: "00:F4:00:00:06:C7",
-        exampleDisplayName: "Living Room",
+        macAddr: "00:F4:00:00:06:C7",
+        displayName: "Living Room",
       },
       // {
       //   exampleUniqueId: 'EFGH',
@@ -78,13 +81,13 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.exampleUniqueId);
+      const uuid = this.api.hap.uuid.generate(device.macAddr);
 
       // see if an accessory with the same uuid has already been registered and restored from
       // the cached devices we stored in the `configureAccessory` method above
       const existingAccessory = this.accessories.find(
         (accessory) => accessory.UUID === uuid
-      );
+      ) as PlatformAccessory<ThermobeaconWs08Context>;
 
       if (existingAccessory) {
         // the accessory already exists
@@ -107,17 +110,17 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
         // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
       } else {
         // the accessory does not yet exist, so we need to create it
-        this.log.info("Adding new accessory:", device.exampleDisplayName);
+        this.log.info("Adding new accessory:", device.displayName);
 
         // create a new accessory
         const accessory = new this.api.platformAccessory(
-          device.exampleDisplayName,
+          device.displayName,
           uuid
-        );
+        ) as PlatformAccessory<ThermobeaconWs08Context>;
 
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device;
+        accessory.context = device;
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
