@@ -1,15 +1,32 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "ThermobeaconWs08",
   "pluginType": "platform",
   "singular": true,
   "schema": {
     "type": "object",
     "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string",
-        "required": true,
-        "default": "Example Dynamic Platform"
+      "sensors": {
+        "type": "array",
+        "items": {
+          "title": "Sensor",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "TV's Name",
+              "type": "string",
+              "description": "The HomeKit name of your Sensor",
+              "minLength": 1,
+              "required": true,
+              "default": "Living Room Sensor"
+            },
+            "macAddress": {
+              "title": "TV's MAC Address",
+              "description": "The MAC Address of your Sensor",
+              "type": "string",
+              "required": true
+            }
+          }
+        }
       }
     }
   }

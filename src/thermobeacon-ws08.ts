@@ -11,16 +11,20 @@ export function read(
   retry = MAX_RETRY
 ): Promise<ThermoBeaconWs08Reading | null> {
   return new Promise((resolve, reject) => {
-    new ThermoBeaconWS08(macAddr, path, (error, value) => {
-      if (error) {
-        reject(error);
-      }
+    try {
+      new ThermoBeaconWS08(macAddr, path, (error, value) => {
+        if (error) {
+          reject(error);
+        }
 
-      if (!value && retry > 0) {
-        setTimeout(() => resolve(read(macAddr, retry - 1)), RETRY_DELAY);
-      }
+        if (!value && retry > 0) {
+          setTimeout(() => resolve(read(macAddr, retry - 1)), RETRY_DELAY);
+        }
 
-      resolve(value);
-    });
+        resolve(value);
+      });
+    } catch (error) {
+      resolve(null);
+    }
   });
 }
