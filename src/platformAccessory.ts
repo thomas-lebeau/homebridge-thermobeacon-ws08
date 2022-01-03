@@ -68,6 +68,8 @@ export class ThermobeaconWs08Accessory {
       );
     }
 
+    this._update();
+
     setInterval(this._update.bind(this), UPDATE_INTERVAL);
   }
 
