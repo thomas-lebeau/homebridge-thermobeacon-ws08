@@ -1,9 +1,8 @@
 {
-  "private": true,
-  "displayName": "Thermobeacon ws08",
+  "displayName": "ThermoBeacon ws08",
   "name": "homebridge-thermobeacon-ws08",
   "version": "1.1.0",
-  "description": "A short description about what your plugin does.",
+  "description": "Plugin for ThermoBeacon ws08 temperature and humidity sensor",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
