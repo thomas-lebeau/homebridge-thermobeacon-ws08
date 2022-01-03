@@ -19,7 +19,7 @@ const UPDATE_INTERVAL = 1000 * 60; // 1 minute
 export class ThermobeaconWs08Accessory {
   private thermometer: Service;
   private hygrometer: Service;
-  private devices: Service[];
+  private services: Service[];
 
   constructor(
     private readonly platform: ThermobeaconWs08Platform,
@@ -48,54 +48,56 @@ export class ThermobeaconWs08Accessory {
       this.accessory.getService(this.platform.Service.HumiditySensor) ||
       this.accessory.addService(this.platform.Service.HumiditySensor);
 
-    this.devices = [this.thermometer, this.hygrometer];
+    this.services = [this.thermometer, this.hygrometer];
 
-    for (const service of this.devices) {
+    for (const service of this.services) {
       service.setCharacteristic(
         this.platform.Characteristic.Name,
-        accessory.context.displayName
+        this.accessory.context.displayName
       );
     }
 
-    setInterval(async () => {
-      const { te, hu, bt } = (await read(this.accessory.context.macAddr)) ?? {};
+    setInterval(this._update, UPDATE_INTERVAL);
+  }
 
-      this.platform.log.debug("Get Sensor values", te, hu, bt);
+  async _update() {
+    const { te, hu, bt } = (await read(this.accessory.context.macAddr)) ?? {};
 
-      if (!te || !hu || !bt) {
-        for (const service of this.devices) {
-          service.updateCharacteristic(
-            this.platform.Characteristic.StatusFault,
-            this.platform.Characteristic.StatusFault.GENERAL_FAULT
-          );
-        }
+    this.platform.log.info("Get Sensor values", te, hu, bt);
 
-        return;
-      }
-
-      this.thermometer.updateCharacteristic(
-        this.platform.Characteristic.CurrentTemperature,
-        te
-      );
-
-      this.hygrometer.updateCharacteristic(
-        this.platform.Characteristic.CurrentRelativeHumidity,
-        hu
-      );
-
-      for (const service of this.devices) {
+    if (!te || !hu || !bt) {
+      for (const service of this.services) {
         service.updateCharacteristic(
           this.platform.Characteristic.StatusFault,
-          this.platform.Characteristic.StatusFault.NO_FAULT
-        );
-
-        service.updateCharacteristic(
-          this.platform.Characteristic.StatusLowBattery,
-          bt <= LOW_BATTERY
-            ? this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
-            : this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
+          this.platform.Characteristic.StatusFault.GENERAL_FAULT
         );
       }
-    }, UPDATE_INTERVAL);
+
+      return;
+    }
+
+    this.thermometer.updateCharacteristic(
+      this.platform.Characteristic.CurrentTemperature,
+      te
+    );
+
+    this.hygrometer.updateCharacteristic(
+      this.platform.Characteristic.CurrentRelativeHumidity,
+      hu
+    );
+
+    for (const service of this.services) {
+      service.updateCharacteristic(
+        this.platform.Characteristic.StatusFault,
+        this.platform.Characteristic.StatusFault.NO_FAULT
+      );
+
+      service.updateCharacteristic(
+        this.platform.Characteristic.StatusLowBattery,
+        bt <= LOW_BATTERY
+          ? this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
+          : this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
+      );
+    }
   }
 }
