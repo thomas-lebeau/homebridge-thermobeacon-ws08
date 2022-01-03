@@ -1,0 +1,51 @@
+name: Publish
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      - name: Install libDbus-1
+        run: sudo apt-get install libdbus-1-dev
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint the project
+        run: npm run lint
+
+      - name: Build the project
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Bump version
+        id: bump-version
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout master
+          npm version update
+          git add -A
+          git push
+          git push --tags
+          echo ::set-output name=version::$(jq -r .version package.json)
+
+      - name: Publish
+        run: npm publish
