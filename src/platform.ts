@@ -12,7 +12,7 @@ import createFakeGatoHistory from "fakegato-history";
 import { PLATFORM_NAME, PLUGIN_NAME } from "./settings";
 import {
   ThermobeaconWs08Accessory,
-  ThermobeaconWs08Context,
+  ThermobeaconWs08SensorConfig,
 } from "./platformAccessory";
 
 export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
@@ -51,7 +51,7 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
 
       const existingAccessory = this.accessories.find(
         (accessory) => accessory.UUID === uuid
-      ) as PlatformAccessory<ThermobeaconWs08Context>;
+      ) as PlatformAccessory<ThermobeaconWs08SensorConfig>;
 
       if (existingAccessory) {
         this.log.info(
@@ -66,7 +66,7 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
         const accessory = new this.api.platformAccessory(
           device.displayName,
           uuid
-        ) as PlatformAccessory<ThermobeaconWs08Context>;
+        ) as PlatformAccessory<ThermobeaconWs08SensorConfig>;
 
         accessory.context = device;
 

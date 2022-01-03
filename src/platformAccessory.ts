@@ -4,15 +4,10 @@ import { Service, PlatformAccessory } from "homebridge";
 import { ThermobeaconWs08Platform } from "./platform";
 import { read } from "./thermobeacon-ws08";
 
-export interface ThermobeaconWs08Context {
-  macAddr: string;
-  displayName: string;
-}
-
 const LOW_BATTERY = 10; // 10%
 const UPDATE_INTERVAL = 1000 * 60; // 1 minute
 
-interface ThermobeaconWs08SensorConfig {
+export interface ThermobeaconWs08SensorConfig {
   name: string;
   macAddress: string;
 }
@@ -29,7 +24,7 @@ export class ThermobeaconWs08Accessory {
 
   constructor(
     private readonly platform: ThermobeaconWs08Platform,
-    private readonly accessory: PlatformAccessory<ThermobeaconWs08Context>
+    private readonly accessory: PlatformAccessory<ThermobeaconWs08SensorConfig>
   ) {
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)
@@ -43,7 +38,7 @@ export class ThermobeaconWs08Accessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
-        this.accessory.context.macAddr
+        this.accessory.context.macAddress
       );
 
     this.thermometer =
@@ -68,7 +63,7 @@ export class ThermobeaconWs08Accessory {
     for (const service of this.services) {
       service.setCharacteristic(
         this.platform.Characteristic.Name,
-        this.accessory.context.displayName
+        this.accessory.context.name
       );
     }
 
@@ -78,7 +73,8 @@ export class ThermobeaconWs08Accessory {
   }
 
   async _update() {
-    const { te, hu, bt } = (await read(this.accessory.context.macAddr)) ?? {};
+    const { te, hu, bt } =
+      (await read(this.accessory.context.macAddress)) ?? {};
 
     this.platform.log.info(
       "Get values: Temperature: %s°C, Humidity: %s%, Battery %s%",
