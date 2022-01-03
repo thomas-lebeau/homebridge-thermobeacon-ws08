@@ -10,6 +10,9 @@
     "sourceType": "module"
   },
   "ignorePatterns": ["dist"],
+  "env": {
+    "node": true
+  },
   "rules": {
     // "quotes": ["error", "double"],
     // "indent": ["warn", 2, { "SwitchCase": 1 }],

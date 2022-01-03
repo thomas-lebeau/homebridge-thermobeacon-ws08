@@ -1,16 +1,10 @@
-import ThermoBeaconWS08 from "thermo_beacon_ws08";
+import ThermoBeaconWS08, { ThermoBeaconWs08Reading } from "thermo_beacon_ws08";
 import { join } from "path";
-// eslint-disable-next-line no-undef
+
 const path = join(__dirname, "../node_modules/thermo_beacon_ws08/");
 
-const MAX_RETRY = 10;
-const RETRY_DELAY = 100;
-
-export interface ThermoBeaconWs08Reading {
-  te: number;
-  hu: number;
-  bt: number;
-}
+const MAX_RETRY = 0;
+const RETRY_DELAY = 300;
 
 export function read(
   macAddr: string,
@@ -23,7 +17,6 @@ export function read(
       }
 
       if (!value && retry > 0) {
-        // eslint-disable-next-line no-undef
         setTimeout(() => resolve(read(macAddr, retry - 1)), RETRY_DELAY);
       }
 
