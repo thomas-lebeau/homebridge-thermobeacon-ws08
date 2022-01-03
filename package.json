@@ -27,6 +27,7 @@
     "homebridge-plugin"
   ],
   "dependencies": {
+    "fakegato-history": "^0.6.2",
     "thermo_beacon_ws08": "0.1.0"
   },
   "devDependencies": {

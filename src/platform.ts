@@ -7,6 +7,7 @@ import {
   Service,
   Characteristic,
 } from "homebridge";
+import createFakeGatoHistory from "fakegato-history";
 
 import { PLATFORM_NAME, PLUGIN_NAME } from "./settings";
 import {
@@ -23,6 +24,7 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic =
     this.api.hap.Characteristic;
+  public readonly FakeGatoHistoryService = createFakeGatoHistory(this.api);
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];

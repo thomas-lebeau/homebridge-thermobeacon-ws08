@@ -1,3 +1,4 @@
+import { FakeGatoHistoryService } from "fakegato-history";
 import { Service, PlatformAccessory } from "homebridge";
 
 import { ThermobeaconWs08Platform } from "./platform";
@@ -19,6 +20,7 @@ const UPDATE_INTERVAL = 1000 * 60; // 1 minute
 export class ThermobeaconWs08Accessory {
   private thermometer: Service;
   private hygrometer: Service;
+  private history: FakeGatoHistoryService;
   private services: Service[];
 
   constructor(
@@ -47,6 +49,15 @@ export class ThermobeaconWs08Accessory {
     this.hygrometer =
       this.accessory.getService(this.platform.Service.HumiditySensor) ||
       this.accessory.addService(this.platform.Service.HumiditySensor);
+
+    this.history = new this.platform.FakeGatoHistoryService(
+      "custom",
+      this.accessory,
+      {
+        storage: "fs",
+        log: this.platform.log,
+      }
+    );
 
     this.services = [this.thermometer, this.hygrometer];
 
@@ -85,6 +96,12 @@ export class ThermobeaconWs08Accessory {
       this.platform.Characteristic.CurrentRelativeHumidity,
       hu
     );
+
+    this.history.addEntry({
+      time: Math.round(new Date().valueOf() / 1000),
+      temp: te,
+      humidity: hu,
+    });
 
     for (const service of this.services) {
       service.updateCharacteristic(
