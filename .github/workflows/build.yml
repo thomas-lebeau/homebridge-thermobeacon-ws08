@@ -31,7 +31,7 @@ jobs:
         run: sudo apt-get install libdbus-1-dev
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Lint the project
         run: npm run lint
