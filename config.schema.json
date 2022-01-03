@@ -12,15 +12,15 @@
           "type": "object",
           "properties": {
             "name": {
-              "title": "TV's Name",
+              "title": "Name",
               "type": "string",
               "description": "The HomeKit name of your Sensor",
               "minLength": 1,
               "required": true,
-              "default": "Living Room Sensor"
+              "default": "ThermoBeacon Sensor"
             },
             "macAddress": {
-              "title": "TV's MAC Address",
+              "title": "Mac address",
               "description": "The MAC Address of your Sensor",
               "type": "string",
               "required": true

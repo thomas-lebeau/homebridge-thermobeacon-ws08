@@ -12,11 +12,15 @@ export interface ThermobeaconWs08Context {
 const LOW_BATTERY = 10; // 10%
 const UPDATE_INTERVAL = 1000 * 60; // 1 minute
 
-/**
- * Platform Accessory
- * An instance of this class is created for each accessory your platform registers
- * Each accessory may expose multiple services of different service types.
- */
+interface ThermobeaconWs08SensorConfig {
+  name: string;
+  macAddress: string;
+}
+
+export interface ThermobeaconWs08Config {
+  sensors: ThermobeaconWs08SensorConfig[];
+}
+
 export class ThermobeaconWs08Accessory {
   private thermometer: Service;
   private hygrometer: Service;
@@ -39,7 +43,7 @@ export class ThermobeaconWs08Accessory {
       )
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
-        "Default-Serial"
+        this.accessory.context.macAddr
       );
 
     this.thermometer =
@@ -76,7 +80,12 @@ export class ThermobeaconWs08Accessory {
   async _update() {
     const { te, hu, bt } = (await read(this.accessory.context.macAddr)) ?? {};
 
-    this.platform.log.info("Get Sensor values", te, hu, bt);
+    this.platform.log.info(
+      "Get values: Temperature: %s°C, Humidity: %s%, Battery %s%",
+      te,
+      hu,
+      bt
+    );
 
     if (!te || !hu || !bt) {
       for (const service of this.services) {
