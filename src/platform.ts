@@ -44,10 +44,10 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
   }
 
   discoverDevices() {
-    const devices = this.config.sensors;
+    const devices: ThermobeaconWs08SensorConfig[] = this.config.sensors;
 
     for (const device of devices) {
-      const uuid = this.api.hap.uuid.generate(device.macAddr);
+      const uuid = this.api.hap.uuid.generate(device.macAddress);
 
       const existingAccessory = this.accessories.find(
         (accessory) => accessory.UUID === uuid
@@ -61,10 +61,10 @@ export class ThermobeaconWs08Platform implements DynamicPlatformPlugin {
 
         new ThermobeaconWs08Accessory(this, existingAccessory);
       } else {
-        this.log.info("Adding new accessory:", device.displayName);
+        this.log.info("Adding new accessory:", device.name);
 
         const accessory = new this.api.platformAccessory(
-          device.displayName,
+          device.name,
           uuid
         ) as PlatformAccessory<ThermobeaconWs08SensorConfig>;
 
