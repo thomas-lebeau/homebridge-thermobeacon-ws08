@@ -51,7 +51,7 @@ export class ThermobeaconWs08Accessory {
       this.accessory.addService(this.platform.Service.HumiditySensor);
 
     this.history = new this.platform.FakeGatoHistoryService(
-      "custom",
+      "weather",
       this.accessory,
       {
         storage: "fs",
