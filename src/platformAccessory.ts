@@ -17,7 +17,9 @@ const UPDATE_INTERVAL = 1000 * 60; // 1 minute
  * Each accessory may expose multiple services of different service types.
  */
 export class ThermobeaconWs08Accessory {
-  private service: Service;
+  private thermometer: Service;
+  private hygrometer: Service;
+  private devices: Service[];
 
   constructor(
     private readonly platform: ThermobeaconWs08Platform,
@@ -38,22 +40,22 @@ export class ThermobeaconWs08Accessory {
         "Default-Serial"
       );
 
-    this.service =
+    this.thermometer =
       this.accessory.getService(this.platform.Service.TemperatureSensor) ||
       this.accessory.addService(this.platform.Service.TemperatureSensor);
 
-    this.service =
+    this.hygrometer =
       this.accessory.getService(this.platform.Service.HumiditySensor) ||
       this.accessory.addService(this.platform.Service.HumiditySensor);
 
-    this.service =
-      this.accessory.getService(this.platform.Service.Battery) ||
-      this.accessory.addService(this.platform.Service.Battery);
+    this.devices = [this.thermometer, this.hygrometer];
 
-    this.service.setCharacteristic(
-      this.platform.Characteristic.Name,
-      accessory.context.displayName
-    );
+    for (const service of this.devices) {
+      service.setCharacteristic(
+        this.platform.Characteristic.Name,
+        accessory.context.displayName
+      );
+    }
 
     setInterval(async () => {
       const { te, hu, bt } = (await read(this.accessory.context.macAddr)) ?? {};
@@ -61,32 +63,39 @@ export class ThermobeaconWs08Accessory {
       this.platform.log.debug("Get Sensor values", te, hu, bt);
 
       if (!te || !hu || !bt) {
-        throw new this.platform.api.hap.HapStatusError(
-          this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
-        );
+        for (const service of this.devices) {
+          service.updateCharacteristic(
+            this.platform.Characteristic.StatusFault,
+            this.platform.Characteristic.StatusFault.GENERAL_FAULT
+          );
+        }
+
+        return;
       }
 
-      this.service.updateCharacteristic(
+      this.thermometer.updateCharacteristic(
         this.platform.Characteristic.CurrentTemperature,
         te
       );
 
-      this.service.updateCharacteristic(
+      this.hygrometer.updateCharacteristic(
         this.platform.Characteristic.CurrentRelativeHumidity,
         hu
       );
 
-      this.service.updateCharacteristic(
-        this.platform.Characteristic.BatteryLevel,
-        bt
-      );
+      for (const service of this.devices) {
+        service.updateCharacteristic(
+          this.platform.Characteristic.StatusFault,
+          this.platform.Characteristic.StatusFault.NO_FAULT
+        );
 
-      this.service.updateCharacteristic(
-        this.platform.Characteristic.StatusLowBattery,
-        bt <= LOW_BATTERY
-          ? this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
-          : this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
-      );
+        service.updateCharacteristic(
+          this.platform.Characteristic.StatusLowBattery,
+          bt <= LOW_BATTERY
+            ? this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
+            : this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
+        );
+      }
     }, UPDATE_INTERVAL);
   }
 }
