@@ -18,9 +18,9 @@ export interface ThermobeaconWs08Config {
 
 export class ThermobeaconWs08Accessory {
   private thermometer: Service;
-  private hygrometer: Service;
   private history: FakeGatoHistoryService;
-  private services: Service[];
+  private hygrometer: Service;
+  private battery: Service;
 
   constructor(
     private readonly platform: ThermobeaconWs08Platform,
@@ -49,6 +49,10 @@ export class ThermobeaconWs08Accessory {
       this.accessory.getService(this.platform.Service.HumiditySensor) ||
       this.accessory.addService(this.platform.Service.HumiditySensor);
 
+    this.battery =
+      this.accessory.getService(this.platform.Service.Battery) ||
+      this.accessory.addService(this.platform.Service.Battery);
+
     this.history = new this.platform.FakeGatoHistoryService(
       "weather",
       this.accessory,
@@ -58,9 +62,12 @@ export class ThermobeaconWs08Accessory {
       }
     );
 
-    this.services = [this.thermometer, this.hygrometer];
+    this.battery.setCharacteristic(
+      this.platform.Characteristic.ChargingState,
+      this.platform.Characteristic.ChargingState.NOT_CHARGEABLE
+    );
 
-    for (const service of this.services) {
+    for (const service of [this.thermometer, this.hygrometer, this.battery]) {
       service.setCharacteristic(
         this.platform.Characteristic.Name,
         this.accessory.context.name
@@ -84,7 +91,7 @@ export class ThermobeaconWs08Accessory {
     );
 
     if (!te || !hu || !bt) {
-      for (const service of this.services) {
+      for (const service of [this.thermometer, this.hygrometer]) {
         service.updateCharacteristic(
           this.platform.Characteristic.StatusFault,
           this.platform.Characteristic.StatusFault.GENERAL_FAULT
@@ -104,18 +111,25 @@ export class ThermobeaconWs08Accessory {
       hu
     );
 
+    this.battery.updateCharacteristic(
+      this.platform.Characteristic.BatteryLevel,
+      bt
+    );
+
     this.history.addEntry({
       time: Math.round(new Date().valueOf() / 1000),
       temp: te,
       humidity: hu,
     });
 
-    for (const service of this.services) {
+    for (const service of [this.thermometer, this.hygrometer]) {
       service.updateCharacteristic(
         this.platform.Characteristic.StatusFault,
         this.platform.Characteristic.StatusFault.NO_FAULT
       );
+    }
 
+    for (const service of [this.thermometer, this.hygrometer, this.battery]) {
       service.updateCharacteristic(
         this.platform.Characteristic.StatusLowBattery,
         bt <= LOW_BATTERY
