@@ -48,6 +48,6 @@ jobs:
           echo ::set-output name=version::$(jq -r .version package.json)
 
       - name: Publish
-        run: npm publish
+        run: npm publish --verbose
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
