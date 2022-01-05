@@ -62,15 +62,10 @@ export class ThermobeaconWs08Accessory {
       }
     );
 
-    this.battery.setCharacteristic(
-      this.platform.Characteristic.ChargingState,
-      this.platform.Characteristic.ChargingState.NOT_CHARGEABLE
-    );
-
     for (const service of [this.thermometer, this.hygrometer, this.battery]) {
       service.setCharacteristic(
         this.platform.Characteristic.Name,
-        this.accessory.context.name
+        this.accessory.displayName
       );
     }
 
@@ -82,20 +77,12 @@ export class ThermobeaconWs08Accessory {
   async _update() {
     let result;
     try {
-      result =
-        (await read(this.accessory.context.macAddress)) ?? {};
-    } catch(error: any) {
-      this.platform.log.debug(error);
+      result = (await read(this.accessory.context.macAddress)) ?? {};
+    } catch (error) {
+      this.platform.log.debug(error as string);
       return;
     }
-    const {te,hu,bt} = result;
-
-    this.platform.log.info(
-      "Get values: Temperature: %s°C, Humidity: %s%, Battery %s%",
-      te,
-      hu,
-      bt
-    );
+    const { te, hu, bt } = result;
 
     if (!te || !hu || !bt) {
       for (const service of [this.thermometer, this.hygrometer]) {
@@ -107,6 +94,14 @@ export class ThermobeaconWs08Accessory {
 
       return;
     }
+
+    this.platform.log.info(
+      "[%s] Temperature: %s°C, Humidity: %s%, Battery %s%",
+      this.accessory.displayName,
+      te,
+      hu,
+      bt
+    );
 
     this.thermometer.updateCharacteristic(
       this.platform.Characteristic.CurrentTemperature,
