@@ -76,12 +76,14 @@ export class ThermobeaconWs08Accessory {
 
   async _update() {
     let result;
+
     try {
       result = (await read(this.accessory.context.macAddress)) ?? {};
     } catch (error) {
       this.platform.log.debug(error as string);
       return;
     }
+
     const { te, hu, bt } = result;
 
     if (!te || !hu || !bt) {

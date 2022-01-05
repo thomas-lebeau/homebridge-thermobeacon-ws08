@@ -44,6 +44,6 @@ jobs:
           echo ::set-output name=version::$(jq -r .version package.json)
 
       - name: Publish
-        run: npm publish --verbose
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
