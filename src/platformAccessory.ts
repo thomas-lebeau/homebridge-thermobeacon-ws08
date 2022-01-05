@@ -80,8 +80,15 @@ export class ThermobeaconWs08Accessory {
   }
 
   async _update() {
-    const { te, hu, bt } =
-      (await read(this.accessory.context.macAddress)) ?? {};
+    let result;
+    try {
+      result =
+        (await read(this.accessory.context.macAddress)) ?? {};
+    } catch(error: any) {
+      this.platform.log.debug(error);
+      return;
+    }
+    const {te,hu,bt} = result;
 
     this.platform.log.info(
       "Get values: Temperature: %s°C, Humidity: %s%, Battery %s%",

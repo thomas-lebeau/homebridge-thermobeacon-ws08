@@ -24,7 +24,7 @@ export function read(
         resolve(value);
       });
     } catch (error) {
-      resolve(null);
+      reject(error);
     }
   });
 }
