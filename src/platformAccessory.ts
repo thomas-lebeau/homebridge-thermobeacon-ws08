@@ -87,12 +87,12 @@ export class ThermobeaconWs08Accessory {
     const { te, hu, bt } = result;
 
     if (!te || !hu || !bt) {
-      for (const service of [this.thermometer, this.hygrometer]) {
-        this.platform.log.warn(
-          "[%s] Unable to read the sensor",
-          this.accessory.displayName
-        );
+      this.platform.log.warn(
+        "[%s] Unable to read the sensor",
+        this.accessory.displayName
+      );
 
+      for (const service of [this.thermometer, this.hygrometer]) {
         service.updateCharacteristic(
           this.platform.Characteristic.StatusFault,
           this.platform.Characteristic.StatusFault.GENERAL_FAULT
