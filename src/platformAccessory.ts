@@ -2,7 +2,7 @@ import { FakeGatoHistoryService } from "fakegato-history";
 import { Service, PlatformAccessory } from "homebridge";
 
 import { ThermobeaconWs08Platform } from "./platform";
-import { read } from "./thermobeacon-ws08";
+import { read, ThermoBeaconWs08Reading } from "./thermobeacon-ws08";
 
 const LOW_BATTERY = 10; // 10%
 const UPDATE_INTERVAL = 1000 * 60; // 1 minute
@@ -75,18 +75,18 @@ export class ThermobeaconWs08Accessory {
   }
 
   async _update() {
-    let result;
+    let result: ThermoBeaconWs08Reading;
 
     try {
-      result = (await read(this.accessory.context.macAddress)) ?? {};
+      result = await read(this.accessory.context.macAddress);
     } catch (error) {
       this.platform.log.debug(error as string);
       return;
     }
 
-    const { te, hu, bt } = result;
+    const { temperature, humidity, battery } = result;
 
-    if (!te || !hu || !bt) {
+    if (!temperature || !humidity || !battery) {
       this.platform.log.warn(
         "[%s] Unable to read the sensor",
         this.accessory.displayName
@@ -105,30 +105,30 @@ export class ThermobeaconWs08Accessory {
     this.platform.log.info(
       "[%s] Temperature: %s°C, Humidity: %s%, Battery %s%",
       this.accessory.displayName,
-      te,
-      hu,
-      bt
+      temperature,
+      humidity,
+      battery
     );
 
     this.thermometer.updateCharacteristic(
       this.platform.Characteristic.CurrentTemperature,
-      te
+      temperature
     );
 
     this.hygrometer.updateCharacteristic(
       this.platform.Characteristic.CurrentRelativeHumidity,
-      hu
+      humidity
     );
 
     this.battery.updateCharacteristic(
       this.platform.Characteristic.BatteryLevel,
-      bt
+      battery
     );
 
     this.history.addEntry({
       time: Math.round(new Date().valueOf() / 1000),
-      temp: te,
-      humidity: hu,
+      temp: temperature,
+      humidity: humidity,
     });
 
     for (const service of [this.thermometer, this.hygrometer]) {
@@ -141,7 +141,7 @@ export class ThermobeaconWs08Accessory {
     for (const service of [this.thermometer, this.hygrometer, this.battery]) {
       service.updateCharacteristic(
         this.platform.Characteristic.StatusLowBattery,
-        bt <= LOW_BATTERY
+        battery <= LOW_BATTERY
           ? this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
           : this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
       );

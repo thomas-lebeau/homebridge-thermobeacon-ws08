@@ -1,30 +1,55 @@
-import ThermoBeaconWS08, { ThermoBeaconWs08Reading } from "thermo_beacon_ws08";
-import { join } from "path";
+import noble from "@abandonware/noble";
 
-const path = join(__dirname, "../node_modules/thermo_beacon_ws08/");
+export type ThermoBeaconWs08Reading = {
+  temperature?: number;
+  humidity?: number;
+  battery?: number;
+};
 
-const MAX_RETRY = 0;
-const RETRY_DELAY = 300;
+type Offset = [Offset: number, ByteLength: number];
 
-export function read(
-  macAddr: string,
-  retry = MAX_RETRY
-): Promise<ThermoBeaconWs08Reading | null> {
-  return new Promise((resolve, reject) => {
-    try {
-      new ThermoBeaconWS08(macAddr, path, (error, value) => {
-        if (error) {
-          reject(error);
-        }
+const SCAN_TIMEOUT = 2000;
+const MSG_LENGTH = 20;
 
-        if (!value && retry > 0) {
-          setTimeout(() => resolve(read(macAddr, retry - 1)), RETRY_DELAY);
-        }
+const BATTERY: Offset = [10, 2];
+const TEMPERATURE: Offset = [12, 2];
+const HUMIDITY: Offset = [14, 2];
 
-        resolve(value);
-      });
-    } catch (error) {
-      reject(error);
-    }
+async function getBuffer(address): Promise<Buffer> {
+  await noble.startScanningAsync();
+
+  return new Promise((resolve) => {
+    noble.on("discover", async (peripheral) => {
+      if (peripheral.address.toUpperCase() === address.toUpperCase()) {
+        await noble.stopScanningAsync();
+
+        resolve(peripheral.advertisement.manufacturerData);
+      }
+    });
+
+    setTimeout(async () => {
+      noble.stopScanningAsync();
+
+      resolve(Buffer.from([]));
+    }, SCAN_TIMEOUT);
   });
+}
+
+export async function read(macAddr: string): Promise<ThermoBeaconWs08Reading> {
+  const buf = await getBuffer(macAddr);
+
+  if (buf.byteLength === MSG_LENGTH) {
+    const temperature = buf.readIntLE(...TEMPERATURE) / 16;
+    const humidity = buf.readIntLE(...HUMIDITY) / 16;
+
+    const battery = (buf.readIntLE(...BATTERY) * 1000) / 3400;
+
+    return {
+      temperature,
+      humidity,
+      battery,
+    };
+  }
+
+  return {};
 }
