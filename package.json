@@ -27,8 +27,7 @@
   ],
   "dependencies": {
     "@abandonware/noble": "^1.9.2-15",
-    "fakegato-history": "^0.6.2",
-    "watch": "^1.0.2"
+    "fakegato-history": "^0.6.2"
   },
   "devDependencies": {
     "@types/node": "^16.10.9",
