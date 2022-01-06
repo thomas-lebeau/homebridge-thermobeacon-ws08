@@ -15,7 +15,7 @@ const BATTERY: Offset = [10, 2];
 const TEMPERATURE: Offset = [12, 2];
 const HUMIDITY: Offset = [14, 2];
 
-let isInitialized;
+let isInitialized: boolean;
 
 async function init() {
   return new Promise((resolve) => {
@@ -25,13 +25,15 @@ async function init() {
 
     noble.on("stateChange", (state) => {
       if (state === "poweredOn") {
+        isInitialized = true;
+
         resolve(null);
       }
     });
   });
 }
 
-async function getBuffer(address): Promise<Buffer> {
+async function getBuffer(address: string): Promise<Buffer> {
   await init();
   await noble.startScanningAsync();
 
