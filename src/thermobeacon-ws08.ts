@@ -42,7 +42,7 @@ export async function read(macAddr: string): Promise<ThermoBeaconWs08Reading> {
     const temperature = buf.readIntLE(...TEMPERATURE) / 16;
     const humidity = buf.readIntLE(...HUMIDITY) / 16;
 
-    const battery = (buf.readIntLE(...BATTERY) * 1000) / 3400;
+    const battery = (buf.readIntLE(...BATTERY) * 100) / 3400;
 
     return {
       temperature,
