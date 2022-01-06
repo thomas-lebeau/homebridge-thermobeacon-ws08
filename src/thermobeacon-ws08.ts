@@ -15,7 +15,24 @@ const BATTERY: Offset = [10, 2];
 const TEMPERATURE: Offset = [12, 2];
 const HUMIDITY: Offset = [14, 2];
 
+let isInitialized;
+
+async function init() {
+  return new Promise((resolve) => {
+    if (isInitialized) {
+      resolve(null);
+    }
+
+    noble.on("stateChange", (state) => {
+      if (state === "poweredOn") {
+        resolve(null);
+      }
+    });
+  });
+}
+
 async function getBuffer(address): Promise<Buffer> {
+  await init();
   await noble.startScanningAsync();
 
   return new Promise((resolve) => {
