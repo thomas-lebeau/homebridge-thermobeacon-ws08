@@ -15,60 +15,81 @@ const BATTERY: Offset = [10, 2];
 const TEMPERATURE: Offset = [12, 2];
 const HUMIDITY: Offset = [14, 2];
 
-let isInitialized: boolean;
+let driverPromise: Promise<void> | null = null;
+let scanPromise: Promise<void> | null = null;
 
-async function init() {
-  return new Promise((resolve) => {
-    if (isInitialized) {
-      resolve(null);
-    }
+const callbacks: Map<string, (buffer: Buffer) => void> = new Map();
 
-    noble.on("stateChange", (state) => {
-      if (state === "poweredOn") {
-        isInitialized = true;
+noble.on("discover", async (peripheral) => {
+  const callback = callbacks.get(peripheral.address.toUpperCase());
 
-        resolve(null);
-      }
+  if (callback) {
+    callback(peripheral.advertisement.manufacturerData);
+  }
+});
+
+function initDriver() {
+  if (!driverPromise) {
+    driverPromise = new Promise((resolve) => {
+      noble.on("stateChange", (state) => {
+        if (state === "poweredOn") {
+          resolve();
+        }
+      });
     });
-  });
+  }
+
+  return driverPromise;
 }
 
-async function getBuffer(address: string): Promise<Buffer> {
-  await init();
-  await noble.startScanningAsync();
+async function startScanning() {
+  await initDriver();
 
-  return new Promise((resolve) => {
-    noble.on("discover", async (peripheral) => {
-      if (peripheral.address.toUpperCase() === address.toUpperCase()) {
-        await noble.stopScanningAsync();
+  if (!scanPromise) {
+    scanPromise = noble.startScanningAsync();
+  }
 
-        resolve(peripheral.advertisement.manufacturerData);
-      }
-    });
+  return scanPromise;
+}
 
-    setTimeout(async () => {
-      noble.stopScanningAsync();
+async function stopScanning() {
+  if (callbacks.size <= 0) {
+    await noble.stopScanningAsync();
 
-      resolve(Buffer.from([]));
-    }, SCAN_TIMEOUT);
-  });
+    scanPromise = null;
+  }
 }
 
 export async function read(macAddr: string): Promise<ThermoBeaconWs08Reading> {
-  const buf = await getBuffer(macAddr);
+  await startScanning();
 
-  if (buf.byteLength === MSG_LENGTH) {
-    const temperature = buf.readIntLE(...TEMPERATURE) / 16;
-    const humidity = buf.readIntLE(...HUMIDITY) / 16;
+  return new Promise((_resolve) => {
+    const timer = setTimeout(resolve, SCAN_TIMEOUT);
 
-    const battery = (buf.readIntLE(...BATTERY) * 100) / 3400;
+    async function resolve(data: ThermoBeaconWs08Reading = {}) {
+      clearTimeout(timer);
+      callbacks.delete(macAddr.toUpperCase());
+      await stopScanning();
 
-    return {
-      temperature,
-      humidity,
-      battery,
-    };
-  }
+      return _resolve(data);
+    }
 
-  return {};
+    async function callback(buf: Buffer) {
+      if (buf.byteLength === MSG_LENGTH) {
+        const temperature = buf.readIntLE(...TEMPERATURE) / 16;
+        const humidity = buf.readIntLE(...HUMIDITY) / 16;
+        const battery = (buf.readIntLE(...BATTERY) * 100) / 3400;
+
+        return resolve({
+          temperature,
+          humidity,
+          battery,
+        });
+      }
+
+      return resolve();
+    }
+
+    callbacks.set(macAddr.toUpperCase(), callback);
+  });
 }
